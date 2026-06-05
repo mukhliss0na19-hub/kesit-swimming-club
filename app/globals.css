@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --green-primary: #0b6b32;
+  --green-dark: #04461f;
+  --gold-primary: #e5b80b;
+  --bg-soft: #f8fafc;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-soft);
+  color: #111827;
+  font-family: var(--font-inter);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: var(--font-heading);
+}
+
+.container-custom {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+html {
+  scroll-behavior: smooth;
+}
+section[id] {
+  scroll-margin-top: 85px;
+}
