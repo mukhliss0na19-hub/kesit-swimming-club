@@ -244,8 +244,7 @@ Mohon informasi langkah berikutnya. Terima kasih.`;
                   Pilih Lokasi
                 </option>
                 <option>Pandantoyo (Pusat)</option>
-                <option>Familiza Baron</option>
-                <option>Nyoklat</option>
+                <option>Familiza Baron Nyoklat</option>
                 <option>Kuniran Taman</option>
               </select>
 
