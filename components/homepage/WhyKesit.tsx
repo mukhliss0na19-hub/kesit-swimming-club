@@ -25,9 +25,9 @@ const features = [
     icon: ShieldCheck,
   },
   {
-    title: "Fasilitas Nyaman",
+    title: "Fasilitas Memadai",
     description:
-      "Kolam latihan nyaman dan lingkungan belajar yang menyenangkan.",
+      "Kolam latihan yang memadai dan lingkungan belajar yang menyenangkan.",
     icon: Waves,
   },
 ];

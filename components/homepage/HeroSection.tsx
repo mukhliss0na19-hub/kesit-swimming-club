@@ -55,10 +55,6 @@ export default function HeroSection() {
             <button className="rounded-full bg-[#0B6B32] px-8 py-4 text-lg font-bold text-white transition hover:scale-105 hover:bg-[#075324]">
               DAFTAR SEKARANG →
             </button>
-
-            <button className="rounded-full border border-[#E5B80B] bg-white/10 px-8 py-4 text-lg font-bold text-white backdrop-blur transition hover:bg-white/20">
-              LIHAT JADWAL
-            </button>
           </div>
 
           {/* STATS */}

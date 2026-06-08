@@ -91,12 +91,7 @@ export default function Footer() {
 
               <div className="flex gap-3">
                 <MapPin className="mt-1 text-[#22C55E]" size={18} />
-                <p>Familiza Baron</p>
-              </div>
-
-              <div className="flex gap-3">
-                <MapPin className="mt-1 text-[#22C55E]" size={18} />
-                <p>Nyoklat</p>
+                <p>Familiza Baron Yoklat</p>
               </div>
 
               <div className="flex gap-3">
