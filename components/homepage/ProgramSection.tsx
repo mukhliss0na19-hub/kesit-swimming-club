@@ -7,27 +7,39 @@ import {
 
 const programs = [
   {
-    title: "Kelas Pemula",
-    description:
-      "Belajar dasar renang dengan metode aman, menyenangkan, dan bertahap.",
-    icon: Baby,
-  },
-  {
     title: "Kelas Reguler",
     description:
-      "Latihan rutin untuk meningkatkan teknik, stamina, dan kemampuan renang.",
+      "Latihan rutin untuk meningkatkan teknik dasar, stamina, dan kemampuan renang secara bertahap bersama pelatih berpengalaman.",
+    schedule: "Sabtu & Minggu",
+    location: [
+      "Kolam Renang Danau Biru Albanawi, Pandantoyo",
+      "Familiza Nyoklat, Baron",
+      "Kuniran Taman",
+    ],
     icon: Waves,
   },
   {
     title: "Private Class",
     description:
-      "Pendampingan intensif dengan jadwal fleksibel sesuai kebutuhan siswa.",
+      "Program latihan privat dengan pendampingan intensif dan fokus pada kebutuhan siswa secara personal untuk hasil yang lebih maksimal.",
+    schedule: "Fleksibel sesuai request",
+    location: [
+      "Kolam Renang Danau Biru Albanawi, Pandantoyo",
+      "Familiza Nyoklat, Baron",
+      "Kuniran Taman",
+    ],
     icon: UserRound,
   },
   {
     title: "Kelas Prestasi",
     description:
-      "Program pembinaan atlet menuju kompetisi dan peningkatan prestasi.",
+      "Program pembinaan atlet renang untuk meningkatkan performa, teknik lanjutan, dan persiapan mengikuti kejuaraan atau kompetisi.",
+    schedule: "Menyesuaikan program latihan atlet",
+    location: [
+      "Kolam Renang Danau Biru Albanawi, Pandantoyo",
+      "Familiza Nyoklat, Baron",
+      "Kuniran Taman",
+    ],
     icon: Trophy,
   },
 ];
@@ -70,7 +82,7 @@ export default function ProgramSection() {
         </div>
 
         {/* CARD */}
-        <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {programs.map((item, index) => {
             const Icon = item.icon;
 
@@ -94,12 +106,41 @@ export default function ProgramSection() {
                 </h3>
 
                 {/* DESC */}
-                <p className="mt-4 text-sm leading-7 text-slate-600 transition duration-300 group-hover:text-slate-200">
-                  {item.description}
-                </p>
+<p className="mt-4 text-sm leading-7 text-slate-600 transition duration-300 group-hover:text-slate-200">
+  {item.description}
+</p>
 
-                {/* LINE */}
-                <div className="mt-6 h-[4px] w-16 rounded-full bg-[#F5C518] transition duration-300 group-hover:w-28" />
+{/* JADWAL */}
+<div className="mt-5">
+  <p className="text-xs font-black uppercase tracking-wide text-[#0B6B32] transition duration-300 group-hover:text-[#F5C518]">
+    Jadwal
+  </p>
+
+  <p className="mt-1 text-sm text-slate-600 transition duration-300 group-hover:text-slate-200">
+    {item.schedule}
+  </p>
+</div>
+
+{/* LOKASI */}
+<div className="mt-4">
+  <p className="text-xs font-black uppercase tracking-wide text-[#0B6B32] transition duration-300 group-hover:text-[#F5C518]">
+    Lokasi Latihan
+  </p>
+
+  <div className="mt-2 space-y-1">
+    {item.location.map((place, i) => (
+      <p
+        key={i}
+        className="text-sm text-slate-600 transition duration-300 group-hover:text-slate-200"
+      >
+        • {place}
+      </p>
+    ))}
+  </div>
+</div>
+
+{/* LINE */}
+<div className="mt-6 h-[4px] w-16 rounded-full bg-[#F5C518] transition duration-300 group-hover:w-28" />
               </div>
             );
           })}

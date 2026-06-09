@@ -30,6 +30,9 @@ export default function PendaftaranPage() {
   const [loading, setLoading] =
     useState(true);
 
+  const [filterProgram, setFilterProgram] =
+    useState("Semua");
+
   const loadData = async () => {
     try {
       const res =
@@ -123,21 +126,108 @@ export default function PendaftaranPage() {
     }
   };
 
+  const filteredData =
+    data.filter((item) =>
+      filterProgram ===
+      "Semua"
+        ? true
+        : item.Program ===
+          filterProgram
+    );
+
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+
+      {/* HEADER */}
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
         <h1 className="text-3xl font-bold">
           Pendaftaran Baru
         </h1>
 
-        <div className="bg-blue-100 text-blue-900 px-4 py-2 rounded-lg font-semibold">
-          Total: {data.length}
+        <div className="flex flex-wrap items-center gap-3">
+
+          <button
+            onClick={() =>
+              setFilterProgram(
+                "Semua"
+              )
+            }
+            className={`rounded-full px-4 py-2 font-semibold transition ${
+              filterProgram ===
+              "Semua"
+                ? "bg-blue-700 text-white"
+                : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+            }`}
+          >
+            Semua
+          </button>
+
+          <button
+            onClick={() =>
+              setFilterProgram(
+                "Reguler"
+              )
+            }
+            className={`rounded-full px-4 py-2 font-semibold transition ${
+              filterProgram ===
+              "Reguler"
+                ? "bg-green-600 text-white"
+                : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+            }`}
+          >
+            Reguler
+          </button>
+
+          <button
+            onClick={() =>
+              setFilterProgram(
+                "Private"
+              )
+            }
+            className={`rounded-full px-4 py-2 font-semibold transition ${
+              filterProgram ===
+              "Private"
+                ? "bg-purple-600 text-white"
+                : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+            }`}
+          >
+            Private
+          </button>
+
+          <button
+            onClick={() =>
+              setFilterProgram(
+                "Prestasi"
+              )
+            }
+            className={`rounded-full px-4 py-2 font-semibold transition ${
+              filterProgram ===
+              "Prestasi"
+                ? "bg-yellow-500 text-white"
+                : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+            }`}
+          >
+            Prestasi
+          </button>
+
+          <div className="rounded-lg bg-blue-100 px-4 py-2 font-semibold text-blue-900">
+            Total:
+            {" "}
+            {
+              filteredData.length
+            }
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      {/* TABLE */}
+      <div className="overflow-hidden rounded-xl bg-white shadow">
+
         <div className="overflow-x-auto">
+
           <table className="w-full">
+
             <thead className="bg-blue-900 text-white">
               <tr>
                 <th className="p-4 text-left">
@@ -175,13 +265,13 @@ export default function PendaftaranPage() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="text-center p-10"
+                    className="p-10 text-center"
                   >
                     Loading...
                   </td>
                 </tr>
               ) : (
-                data.map(
+                filteredData.map(
                   (
                     item,
                     index
@@ -221,7 +311,7 @@ export default function PendaftaranPage() {
 
                       <td className="p-4">
                         <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusClass(
+                          className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusClass(
                             item.Status
                           )}`}
                         >
@@ -233,7 +323,7 @@ export default function PendaftaranPage() {
                       <td className="p-4">
                         {item.Status ===
                         "Aktif" ? (
-                          <span className="text-green-600 font-semibold">
+                          <span className="font-semibold text-green-600">
                             Aktif
                           </span>
                         ) : (
@@ -245,7 +335,7 @@ export default function PendaftaranPage() {
                                   "Aktif"
                                 )
                               }
-                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
+                              className="rounded-lg bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
                             >
                               Terima
                             </button>
@@ -257,7 +347,7 @@ export default function PendaftaranPage() {
                                   "Ditolak"
                                 )
                               }
-                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm"
+                              className="rounded-lg bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
                             >
                               Tolak
                             </button>

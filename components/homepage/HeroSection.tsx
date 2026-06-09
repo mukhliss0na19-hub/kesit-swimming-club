@@ -6,14 +6,19 @@ export default function HeroSection() {
     >
       {/* BACKGROUND IMAGE */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 scale-x-[-1]"
         style={{
           backgroundImage: "url('/hero-swimming.jpg')",
-        }}
-      />
-
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "52%",
+          backgroundPosition: "left center",
+          opacity: 0.5,
+          filter:
+            "brightness(1.5) contrast(1.35) sepia(0.25)",
+  }}
+    />
       {/* DARK OVERLAY */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#03180D]/95 via-[#03180D]/80 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#03180D]/92 via-[#03180D]/65 to-[#03180D]/10" />
 
       {/* GREEN EFFECT */}
       <div className="absolute left-0 top-0 h-full w-[45%] bg-[#0B6B32]/30 blur-[120px]" />
@@ -52,9 +57,12 @@ export default function HeroSection() {
 
           {/* BUTTON */}
           <div className="mt-7 flex flex-wrap gap-4">
-            <button className="rounded-full bg-[#0B6B32] px-8 py-4 text-lg font-bold text-white transition hover:scale-105 hover:bg-[#075324]">
+            <a
+              href="#daftar"
+              className="rounded-full bg-[#0B6B32] px-8 py-4 text-lg font-bold text-white transition hover:scale-105 hover:bg-[#075324]"
+            >
               DAFTAR SEKARANG →
-            </button>
+            </a>
           </div>
 
           {/* STATS */}

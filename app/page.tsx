@@ -5,7 +5,6 @@ import ProgramSection from "@/components/homepage/ProgramSection";
 import WhyKesit from "@/components/homepage/WhyKesit";
 import AchievementSection from "@/components/homepage/AchievementSection";
 import GallerySection from "@/components/homepage/GallerySection";
-import ScheduleSection from "@/components/homepage/ScheduleSection";
 import CTASection from "@/components/homepage/CTASection";
 import FloatingWhatsApp from "@/components/homepage/FloatingWhatsApp";
 
@@ -20,13 +19,11 @@ export default function HomePage() {
 
       <ProgramSection />
 
-       <AchievementSection />
+      <AchievementSection />
 
-       <ScheduleSection />
+      <GallerySection />
 
-       <GallerySection />
-
-       <CTASection />
+      <CTASection />
 
       <Footer />
 

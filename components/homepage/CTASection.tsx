@@ -84,25 +84,25 @@ export default function CTASection() {
               {/* BUTTON */}
               <div className="mt-8 flex flex-col gap-4">
 
-                <a
-                  href={`https://wa.me/${whatsappNumber}?text=Halo%20Kesit%20Swimming%20Club,%20saya%20ingin%20bertanya%20tentang%20kelas%20renang`}
+              {/* DAFTAR VIA WHATSAPP */}
+              <a
+                 href={`https://wa.me/${whatsappNumber}?text=Halo%20Kesit%20Swimming%20Club,%20saya%20ingin%20bertanya%20tentang%20kelas%20renang`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full bg-[#F5C518] px-8 py-4 text-center text-lg font-black text-black transition duration-300 hover:scale-105 hover:bg-[#FFD84D]"
-                >
-                  Daftar via WhatsApp
-                </a>
+                  className="rounded-full border-2 border-[#F5C518] bg-[#0B6B32] px-8 py-4 text-center text-lg font-black text-white transition duration-300 hover:scale-105 hover:bg-[#0F7C3A]"
+              >
+                Daftar via WhatsApp
+              </a>
 
-                <a
-                  href="#jadwal"
-                  className="rounded-full border border-white/20 bg-white/10 px-8 py-4 text-center text-lg font-bold transition duration-300 hover:bg-white/20"
-                >
-                  Lihat Jadwal
-                </a>
-
+              {/* DAFTAR SEKARANG */}
+              <a
+                href="/daftar"
+                className="rounded-full border-2 border-black bg-[#F5C518] px-8 py-4 text-center text-lg font-black text-black transition duration-300 hover:scale-105 hover:bg-[#FFD84D]"
+              >
+                Daftar Sekarang
+              </a>
               </div>
             </div>
-
           </div>
         </div>
       </div>
