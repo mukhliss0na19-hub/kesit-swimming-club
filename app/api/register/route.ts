@@ -12,17 +12,22 @@ export async function POST(
     );
 
     const formData =
-      new URLSearchParams();
+  new URLSearchParams();
 
-    Object.entries(body)
-      .forEach(
-        ([key, value]) => {
-          formData.append(
-            key,
-            String(value)
-          );
-        }
+formData.append(
+  "action",
+  "register"
+);
+
+Object.entries(body)
+  .forEach(
+    ([key, value]) => {
+      formData.append(
+        key,
+        String(value)
       );
+    }
+  );
 
     const response =
       await fetch(

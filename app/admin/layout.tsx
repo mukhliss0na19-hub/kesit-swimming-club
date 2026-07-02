@@ -8,6 +8,8 @@ const menuItems = [
   { name: "Pendaftaran", href: "/admin/pendaftaran" },
   { name: "Data Siswa", href: "/admin/siswa" },
   { name: "Absensi", href: "/admin/absensi" },
+  { name: "Absensi-prestasi", href: "/admin/Absensi-prestasi" },
+  { name: "pelatih", href: "/admin/pelatih"},
   { name: "Progress", href: "/admin/progress" },
   { name: "Laporan", href: "/admin/laporan" },
 ];

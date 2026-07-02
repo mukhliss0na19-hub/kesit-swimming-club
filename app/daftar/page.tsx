@@ -1,21 +1,27 @@
 "use client";
 
-import { useState } from "react";
-
+import {
+  useEffect,
+  useState,
+} from "react";
 export default function DaftarPage() {
   const [loading, setLoading] = useState(false);
+  const [pelatihList, setPelatihList] =
+  useState<any[]>([]);
 
-  const [form, setForm] = useState({
-    nama: "",
-    umur: "",
-    gender: "",
-    ortu: "",
-    whatsapp: "",
-    program: "",
-    lokasi: "",
-    jadwal: "",
-    catatan: "",
-  });
+ const [form, setForm] = useState({
+  nama: "",
+  umur: "",
+  gender: "",
+  ortu: "",
+  whatsapp: "",
+  program: "",
+  grup: "",
+  pelatih: "",
+  lokasi: "",
+  jadwal: "",
+  catatan: "",
+});
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -29,6 +35,43 @@ export default function DaftarPage() {
       [e.target.name]: e.target.value,
     });
   };
+
+  useEffect(() => {
+
+  const loadPelatih =
+    async () => {
+
+      try {
+
+        const res =
+          await fetch(
+            "/api/pelatih"
+          );
+
+        const result =
+          await res.json();
+
+        console.log(
+          "DATA PELATIH:",
+          result
+        );
+
+        setPelatihList(
+          result.data || []
+        );
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+      }
+    };
+
+  loadPelatih();
+
+}, []);
 
 const handleSubmit = async (
   e: React.FormEvent<HTMLFormElement>
@@ -101,6 +144,8 @@ Mohon informasi langkah berikutnya. Terima kasih.`;
       ortu: "",
       whatsapp: "",
       program: "",
+      grup: "",
+      pelatih: "",
       lokasi: "",
       jadwal: "",
       catatan: "",
@@ -232,7 +277,52 @@ Mohon informasi langkah berikutnya. Terima kasih.`;
                 <option>Private</option>
                 <option>Prestasi</option>
               </select>
+              {form.program === "Prestasi" && (
+            <select
+                name="grup"
+                value={form.grup}
+                onChange={handleChange}
+                required
+                className="rounded-2xl border border-slate-200 px-5 py-4 outline-none focus:border-[#0B6B32]"
+            >
+             <option value="">
+               Pilih Grup Prestasi
+              </option>
 
+              <option>Prestasi A</option>
+             <option>Prestasi B</option>
+             <option>Prestasi C</option>
+             <option>Prestasi D</option>
+            </select>
+            )}
+            {form.program === "Private" && (
+            <select
+              name="pelatih"
+              value={form.pelatih}
+              onChange={handleChange}
+              required
+              className="rounded-2xl border border-slate-200 px-5 py-4 outline-none focus:border-[#0B6B32]"
+            >
+            <option value="">
+              Pilih Pelatih
+              </option>
+
+              {pelatihList.map(
+              (pelatih) => (
+           <option
+            key={pelatih.ID}
+            value={
+              pelatih["Nama Pelatih"]
+                  }
+           >
+           {
+            pelatih["Nama Pelatih"]
+           }
+          </option>
+            )
+          )}
+              </select>
+              )}
               <select
                 name="lokasi"
                 value={form.lokasi}

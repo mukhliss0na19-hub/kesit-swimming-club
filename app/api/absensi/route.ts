@@ -8,7 +8,7 @@ export async function GET() {
 
     const res =
       await fetch(
-        `${SCRIPT_URL}?action=getPendaftaran`,
+        `${SCRIPT_URL}?action=getAbsensi`,
         {
           cache:
             "no-store",
@@ -29,6 +29,8 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
+        message:
+          "Gagal mengambil data",
       },
       {
         status: 500,
@@ -50,22 +52,12 @@ export async function POST(
 
     formData.append(
       "action",
-      "updateStatus"
-    );
-
-    formData.append(
-      "row",
-      String(body.row)
-    );
-
-    formData.append(
-      "status",
-      body.status
+      "absensi"
     );
 
     formData.append(
       "id",
-      body.id || ""
+      body.id
     );
 
     const res =
@@ -91,6 +83,8 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
+        message:
+          "Gagal absensi",
       },
       {
         status: 500,

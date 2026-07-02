@@ -35,42 +35,56 @@ export default function SiswaPage() {
     useState("");
 
   const loadData =
-    async () => {
-      try {
-        const response =
-          await fetch(
-            "/api/pendaftaran",
-            {
-              cache:
-                "no-store",
-            }
-          );
+  async () => {
+    try {
 
-        const result =
-          await response.json();
+      const response =
+        await fetch(
+          "/api/pendaftaran",
+          {
+            cache:
+              "no-store",
+          }
+        );
 
-        const siswaAktif =
-          result.filter(
-            (
-              item: Siswa
-            ) =>
-              item.Status ===
-              "Aktif"
-          );
+      const result =
+        await response.json();
 
-        setData(
-          siswaAktif
+      const dataPendaftaran =
+        Array.isArray(
+          result?.data
+        )
+          ? result.data
+          : [];
+
+      const siswaAktif =
+        dataPendaftaran.filter(
+          (
+            item: Siswa
+          ) =>
+            item.Status ===
+            "Aktif"
         );
-      } catch (error) {
-        console.error(
-          error
-        );
-      } finally {
-        setLoading(
-          false
-        );
-      }
-    };
+
+      setData(
+        siswaAktif
+      );
+
+    } catch (error) {
+
+      console.error(
+        error
+      );
+
+      setData([]);
+
+    } finally {
+
+      setLoading(
+        false
+      );
+    }
+  };
 
   useEffect(() => {
     loadData();

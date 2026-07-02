@@ -11,7 +11,7 @@ interface Pendaftaran {
   Nama: string;
   Umur: string;
   Gender: string;
-  "Orang Tua": string;
+  OrangTua: string;
   WhatsApp: string;
   Program: string;
   Lokasi: string;
@@ -34,38 +34,76 @@ export default function PendaftaranPage() {
     useState("Semua");
 
   const loadData = async () => {
-    try {
-      const res =
-        await fetch(
-          "/api/pendaftaran"
-        );
+  try {
+    const res =
+      await fetch(
+        "/api/pendaftaran"
+      );
 
-      const result =
-        await res.json();
+    const result =
+      await res.json();
 
-      setData(result);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setData(
+      Array.isArray(result?.data)
+        ? result.data
+        : []
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    setData([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const generateId = () => {
-    const activeCount =
-      data.filter(
-        (item) =>
-          item.Status ===
-          "Aktif"
-      ).length + 1;
+  const generateId =
+  () => {
+
+    const existingIds =
+      data
+        .map(
+          (
+            item
+          ) =>
+            item.ID
+        )
+        .filter(
+          Boolean
+        )
+        .map(
+          (
+            id
+          ) =>
+            Number(
+              String(
+                id
+              ).replace(
+                "KST",
+                ""
+              )
+            )
+        );
+
+    const lastId =
+      existingIds
+        .length > 0
+        ? Math.max(
+            ...existingIds
+          )
+        : 0;
 
     return `KST${String(
-      activeCount
-    ).padStart(3, "0")}`;
+      lastId + 1
+    ).padStart(
+      3,
+      "0"
+    )}`;
   };
 
   const updateStatus =
