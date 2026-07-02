@@ -408,7 +408,34 @@ year:"numeric"
               </tbody>
 
             </table>
+<div className="flex flex-wrap gap-6 mt-6 text-sm font-medium text-gray-700">
 
+  <div className="flex items-center gap-2">
+    <span className="text-2xl">🟢</span>
+    <span>Hadir</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <span className="text-2xl">🟡</span>
+    <span>Izin</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <span className="text-2xl">🔵</span>
+    <span>Sakit</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <span className="text-2xl">🔴</span>
+    <span>Alpha</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <span className="text-2xl">⚪</span>
+    <span>Belum Diisi</span>
+  </div>
+
+</div>
           </div>
 
         )}
