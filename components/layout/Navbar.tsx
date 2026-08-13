@@ -9,6 +9,7 @@ const menu = [
   { label: "Program", href: "#program" },
   { label: "Prestasi", href: "#prestasi" },
   { label: "Galeri", href: "#galeri" },
+  { label: "Laporan Siswa", href: "#laporan" },
 ];
 
 export default function Navbar() {

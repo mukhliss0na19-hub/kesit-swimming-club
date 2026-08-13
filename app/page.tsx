@@ -7,6 +7,7 @@ import AchievementSection from "@/components/homepage/AchievementSection";
 import GallerySection from "@/components/homepage/GallerySection";
 import CTASection from "@/components/homepage/CTASection";
 import FloatingWhatsApp from "@/components/homepage/FloatingWhatsApp";
+import StudentReportSection from "@/components/homepage/StudentReportSection";
 
 export default function HomePage() {
   return (
@@ -22,6 +23,8 @@ export default function HomePage() {
       <AchievementSection />
 
       <GallerySection />
+      
+      <StudentReportSection />
 
       <CTASection />
 
