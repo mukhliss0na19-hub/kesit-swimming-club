@@ -6,7 +6,7 @@ const SCRIPT_URL =
 export async function GET() {
   try {
     const res = await fetch(
-      `${SCRIPT_URL}?action=getSiswa`,
+      `${SCRIPT_URL}?action=getMasterLevel`,
       {
         cache: "no-store",
       }
@@ -23,7 +23,7 @@ export async function GET() {
     return NextResponse.json(data);
   } catch (error) {
     console.error(
-      "GET SISWA ERROR:",
+      "GET MASTER LEVEL ERROR:",
       error
     );
 
@@ -31,7 +31,7 @@ export async function GET() {
       {
         success: false,
         message:
-          "Gagal mengambil data siswa",
+          "Gagal mengambil Master Level.",
       },
       {
         status: 500,

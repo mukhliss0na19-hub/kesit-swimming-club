@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxGFM4YhUoqwgyvC1Dy6Z9zct8-uU9T6ooATrhULT9TkHRhC5F9GfTTUnXkokwOIwo/exec";
+  "https://script.google.com/macros/s/AKfycby0TDHNXEhyccK9l0-jMJr7QU9bDu7UD1QXZZoECj_uMx2vrm5puntiq3D0iszyEFec/exec";
 
 function buatToken(
   idSiswa: string,
@@ -11,15 +11,12 @@ function buatToken(
   const payload = {
     idSiswa,
     namaSiswa,
-    exp:
-      Date.now() +
-      1000 * 60 * 60 * 8,
+    exp: Date.now() + 1000 * 60 * 60 * 8,
   };
 
-  const data =
-    Buffer.from(
-      JSON.stringify(payload)
-    ).toString("base64url");
+  const data = Buffer
+    .from(JSON.stringify(payload))
+    .toString("base64url");
 
   const secret =
     process.env.PORTAL_SESSION_SECRET;
@@ -43,6 +40,11 @@ export async function POST(
   request: Request
 ) {
   try {
+
+    // =================================================
+    // AMBIL DATA DARI FORM LOGIN
+    // =================================================
+
     const body =
       await request.json();
 
@@ -56,52 +58,141 @@ export async function POST(
         body.password || ""
       ).trim();
 
+
+    // =================================================
+    // VALIDASI
+    // =================================================
+
     if (!idSiswa || !password) {
+
       return NextResponse.json({
         success: false,
         message:
           "ID siswa dan password wajib diisi",
       });
+
     }
 
+
+    // =================================================
+    // BUAT URL APPS SCRIPT
+    // =================================================
+
     const params =
-      new URLSearchParams();
+      new URLSearchParams({
+        action: "loginOrangTua",
+        idSiswa,
+        password,
+      });
 
-    params.append(
-      "action",
-      "loginOrangTua"
-    );
+    const url =
+      `${SCRIPT_URL}?${params.toString()}`;
 
-    params.append(
-      "idSiswa",
+
+    console.log(
+      "Login orang tua:",
       idSiswa
     );
 
-    params.append(
-      "password",
-      password
+
+    // =================================================
+    // PANGGIL GOOGLE APPS SCRIPT
+    // =================================================
+
+    const res =
+      await fetch(
+        url,
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+
+    // =================================================
+    // CEK RESPONSE APPS SCRIPT
+    // =================================================
+
+    const text =
+      await res.text();
+
+    console.log(
+      "Response Apps Script:",
+      text
     );
 
-  const url =
-  `${SCRIPT_URL}?action=loginOrangTua` +
-  `&idSiswa=${encodeURIComponent(idSiswa)}` +
-  `&password=${encodeURIComponent(password)}`;
 
-const res =
-  await fetch(
-    url,
-    {
-      method: "GET",
-      cache: "no-store",
+    let data;
+
+    try {
+
+      data =
+        JSON.parse(text);
+
+    } catch {
+
+      console.error(
+        "Response Apps Script bukan JSON:",
+        text
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Response dari server Google tidak valid",
+        },
+        {
+          status: 500,
+        }
+      );
+
     }
-  );
 
-    const data =
-      await res.json();
+
+    // =================================================
+    // LOGIN GAGAL
+    // =================================================
 
     if (!data.success) {
-      return NextResponse.json(data);
+
+      return NextResponse.json(
+        data,
+        {
+          status: 401,
+        }
+      );
+
     }
+
+
+    // =================================================
+    // VALIDASI DATA LOGIN
+    // =================================================
+
+    if (
+      !data.data ||
+      !data.data.idSiswa ||
+      !data.data.namaSiswa
+    ) {
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Data siswa dari server tidak lengkap",
+        },
+        {
+          status: 500,
+        }
+      );
+
+    }
+
+
+    // =================================================
+    // BUAT SESSION TOKEN
+    // =================================================
 
     const token =
       buatToken(
@@ -109,33 +200,61 @@ const res =
         data.data.namaSiswa
       );
 
+
+    // =================================================
+    // RESPONSE
+    // =================================================
+
     const response =
       NextResponse.json({
+
         success: true,
+
         message:
           "Login berhasil",
+
         data: {
+
+          idSiswa:
+            data.data.idSiswa,
+
           namaSiswa:
             data.data.namaSiswa,
+
+          idAkun:
+            data.data.idAkun || "",
+
         },
+
       });
+
+
+    // =================================================
+    // SIMPAN SESSION COOKIE
+    // =================================================
 
     response.cookies.set(
       "portal_session",
       token,
       {
         httpOnly: true,
+
         secure:
           process.env.NODE_ENV ===
           "production",
+
         sameSite: "lax",
+
         path: "/",
+
         maxAge:
           60 * 60 * 8,
       }
     );
 
+
     return response;
+
 
   } catch (error) {
 
@@ -147,12 +266,16 @@ const res =
     return NextResponse.json(
       {
         success: false,
+
         message:
-          "Terjadi kesalahan server",
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan server",
       },
       {
         status: 500,
       }
     );
+
   }
 }
