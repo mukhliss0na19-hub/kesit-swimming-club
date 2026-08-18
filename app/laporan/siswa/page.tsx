@@ -1,5 +1,3 @@
-/* app/laporan/siswa/page.tsx */
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -23,14 +21,41 @@ type Progress = {
   Catatan?: string;
 };
 
-type DetailProgress = {
-  [key: string]: string | number | undefined;
-};
+type DetailProgress = Record<
+  string,
+  string | number | undefined
+>;
 
 type MasterIndikator = {
   level: number | string;
   tujuan?: string;
   indikator: string;
+};
+
+type Kehadiran = {
+  total: number;
+  hadir: number;
+  alpha: number;
+  persentase: number;
+};
+
+type RiwayatPembayaran = {
+  tanggal?: string;
+  status?: string;
+};
+
+type PembayaranCurrent = {
+  idSiswa?: string;
+  nama?: string;
+  program?: string;
+  kuota?: string | number;
+  status?: string;
+  tanggalBayar?: string;
+};
+
+type Pembayaran = {
+  current: PembayaranCurrent | null;
+  history: RiwayatPembayaran[];
 };
 
 export default function LaporanSiswaPage() {
@@ -42,13 +67,22 @@ export default function LaporanSiswaPage() {
     useState<DetailProgress | null>(null);
   const [masterIndikator, setMasterIndikator] =
     useState<MasterIndikator[]>([]);
+  const [kehadiran, setKehadiran] =
+    useState<Kehadiran | null>(null);
+  const [pembayaran, setPembayaran] =
+    useState<Pembayaran | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
-  const [error, setError] = useState("");
+  const [loadingKehadiran, setLoadingKehadiran] =
+    useState(false);
+  const [loadingPembayaran, setLoadingPembayaran] =
+    useState(false);
 
-  // =========================
-  // LOGIN PORTAL SISWA
-  // =========================
+  // =====================================================
+  // SESSION
+  // =====================================================
+
   useEffect(() => {
     const raw = sessionStorage.getItem("portalSiswa");
 
@@ -58,32 +92,33 @@ export default function LaporanSiswaPage() {
     }
 
     try {
-      const parsed = JSON.parse(raw);
+      const data = JSON.parse(raw);
 
-      if (!parsed?.idSiswa) {
-        throw new Error("Data siswa tidak lengkap.");
+      if (!data?.idSiswa) {
+        throw new Error("Data siswa tidak lengkap");
       }
 
       setSiswa({
-        idSiswa: String(parsed.idSiswa),
-        namaSiswa: String(parsed.namaSiswa || "Siswa"),
+        idSiswa: String(data.idSiswa),
+        namaSiswa: String(data.namaSiswa || "Siswa"),
       });
-    } catch {
+    } catch (error) {
+      console.error(error);
       sessionStorage.removeItem("portalSiswa");
       router.replace("/");
     }
   }, [router]);
 
-  // =========================
-  // AMBIL PROGRESS
-  // =========================
+  // =====================================================
+  // PROGRESS
+  // =====================================================
+
   useEffect(() => {
     if (!siswa?.idSiswa) return;
 
-    async function loadProgress() {
+    async function load() {
       try {
         setLoading(true);
-        setError("");
 
         const res = await fetch(
           `/api/progress/riwayat?idSiswa=${encodeURIComponent(
@@ -94,36 +129,28 @@ export default function LaporanSiswaPage() {
 
         const json = await res.json();
 
-        if (!res.ok || !json.success) {
-          throw new Error(
-            json.message || "Gagal mengambil progress siswa."
-          );
-        }
-
         setProgress(
-          Array.isArray(json.data) ? json.data : []
+          json.success && Array.isArray(json.data)
+            ? json.data
+            : []
         );
-      } catch (err) {
-        console.error("LOAD PROGRESS:", err);
+      } catch (error) {
+        console.error("PROGRESS:", error);
         setProgress([]);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Gagal mengambil progress siswa."
-        );
       } finally {
         setLoading(false);
       }
     }
 
-    loadProgress();
+    load();
   }, [siswa]);
 
-  // =========================
-  // AMBIL MASTER LEVEL
-  // =========================
+  // =====================================================
+  // MASTER
+  // =====================================================
+
   useEffect(() => {
-    async function loadMaster() {
+    async function load() {
       try {
         const res = await fetch(
           "/api/progress/master",
@@ -132,28 +159,46 @@ export default function LaporanSiswaPage() {
 
         const json = await res.json();
 
-        if (!res.ok || !json.success) {
-          throw new Error(
-            json.message || "Gagal mengambil Master Level."
-          );
-        }
-
         setMasterIndikator(
-          Array.isArray(json.data) ? json.data : []
+          json.success && Array.isArray(json.data)
+            ? json.data
+            : []
         );
-      } catch (err) {
-        console.error("LOAD MASTER:", err);
+      } catch (error) {
+        console.error("MASTER:", error);
       }
     }
 
-    loadMaster();
+    load();
   }, []);
 
-  // =========================
-  // AMBIL DETAIL PROGRESS
-  // =========================
+  // =====================================================
+  // SORT
+  // =====================================================
+
+  const sortedProgress = useMemo(() => {
+    return [...progress].sort((a, b) => {
+      return (
+        new Date(b.Tanggal || "").getTime() -
+        new Date(a.Tanggal || "").getTime()
+      );
+    });
+  }, [progress]);
+
   const latestProgress =
-    progress.length > 0 ? progress[0] : null;
+    sortedProgress[0] || null;
+
+  const currentLevel = Number(
+    latestProgress?.Level || 0
+  );
+
+  const latestScore = Number(
+    latestProgress?.["Nilai Akhir"] || 0
+  );
+
+  // =====================================================
+  // DETAIL
+  // =====================================================
 
   useEffect(() => {
     const idProgress =
@@ -164,7 +209,7 @@ export default function LaporanSiswaPage() {
       return;
     }
 
-    async function loadDetail() {
+    async function load() {
       try {
         setLoadingDetail(true);
 
@@ -177,381 +222,704 @@ export default function LaporanSiswaPage() {
 
         const json = await res.json();
 
-        console.log(
-          "DETAIL PROGRESS SISWA:",
-          json
+        const data = Array.isArray(json.data)
+          ? json.data[0]
+          : json.data;
+
+        setDetailProgress(
+          json.success ? data || null : null
         );
-
-        if (!res.ok || !json.success) {
-          throw new Error(
-            json.message ||
-              "Gagal mengambil detail progress."
-          );
-        }
-
-        const row =
-          Array.isArray(json.data)
-            ? json.data[0]
-            : null;
-
-        setDetailProgress(row || null);
-      } catch (err) {
-        console.error(
-          "LOAD DETAIL PROGRESS:",
-          err
-        );
+      } catch (error) {
+        console.error("DETAIL:", error);
         setDetailProgress(null);
       } finally {
         setLoadingDetail(false);
       }
     }
 
-    loadDetail();
+    load();
   }, [latestProgress]);
 
-  const currentLevel =
-    latestProgress
-      ? Number(latestProgress.Level || 0)
-      : 0;
+  // =====================================================
+  // KEHADIRAN
+  // =====================================================
 
-  const latestScore =
-    latestProgress
-      ? Number(
-          latestProgress["Nilai Akhir"] || 0
-        )
-      : 0;
+  useEffect(() => {
+    if (!siswa?.idSiswa) return;
 
-  // =========================
+    async function load() {
+      try {
+        setLoadingKehadiran(true);
+
+        const res = await fetch(
+          `/api/kehadiran/orangtua?idSiswa=${encodeURIComponent(
+            siswa.idSiswa
+          )}`,
+          { cache: "no-store" }
+        );
+
+        const json = await res.json();
+        const data = json.data;
+
+        if (json.success) {
+          setKehadiran({
+            total: Number(data?.total) || 0,
+            hadir: Number(data?.hadir) || 0,
+            alpha: Number(data?.alpha) || 0,
+            persentase:
+              Number(data?.persentase) || 0,
+          });
+        }
+      } catch (error) {
+        console.error("KEHADIRAN:", error);
+      } finally {
+        setLoadingKehadiran(false);
+      }
+    }
+
+    load();
+  }, [siswa]);
+
+  // =====================================================
+  // PEMBAYARAN
+  // =====================================================
+
+  useEffect(() => {
+    if (!siswa?.idSiswa) return;
+
+    async function load() {
+      try {
+        setLoadingPembayaran(true);
+
+        const res = await fetch(
+          `/api/pembayaran?idSiswa=${encodeURIComponent(
+            siswa.idSiswa
+          )}`,
+          { cache: "no-store" }
+        );
+
+        const json = await res.json();
+
+        if (json.success) {
+          setPembayaran({
+            current: json.data?.current || null,
+            history: Array.isArray(json.data?.history)
+              ? json.data.history
+              : [],
+          });
+        }
+      } catch (error) {
+        console.error("PEMBAYARAN:", error);
+      } finally {
+        setLoadingPembayaran(false);
+      }
+    }
+
+    load();
+  }, [siswa]);
+
+  // =====================================================
   // INDIKATOR
-  // =========================
-  const latestIndicators = useMemo(() => {
+  // =====================================================
+
+  const indicators = useMemo(() => {
     if (!detailProgress || !currentLevel) {
       return [];
     }
 
-    const master =
-      masterIndikator.filter(
+    return masterIndikator
+      .filter(
         (item) =>
-          Number(item.level) ===
-          currentLevel
-      );
-
-    return master.map(
-      (item, index) => {
-        const nomor = index + 1;
-
-        /*
-         * PENTING:
-         * Detail Progress Anda sudah terbukti
-         * mengembalikan:
-         *
-         * "Indikator 1": 100
-         * "Indikator 2": 100
-         * dst.
-         *
-         * Jadi nilai diambil langsung dari
-         * Detail Progress.
-         */
-        const key =
-          `Indikator ${nomor}`;
-
+          Number(item.level) === currentLevel
+      )
+      .map((item, index) => {
         const raw =
-          detailProgress[key];
+          detailProgress[`Indikator ${index + 1}`];
 
-        const value =
-          typeof raw === "number"
-            ? raw
-            : Number(raw ?? 0);
+        const nilai = Math.max(
+          0,
+          Math.min(100, Number(raw) || 0)
+        );
 
         return {
-          nomor,
-          indikator:
-            item.indikator,
-          tujuan:
-            item.tujuan || "",
-          nilai:
-            Number.isFinite(value)
-              ? Math.max(
-                  0,
-                  Math.min(100, value)
-                )
-              : 0,
+          nomor: index + 1,
+          indikator: item.indikator,
+          nilai,
         };
-      }
-    );
+      });
   }, [
     detailProgress,
     masterIndikator,
     currentLevel,
   ]);
 
-  function formatTanggal(
-    value?: string
-  ) {
+  // =====================================================
+  // FORMAT TANGGAL
+  // =====================================================
+
+  function formatTanggal(value?: string) {
     if (!value) return "-";
 
-    const date =
-      new Date(value);
+    const date = new Date(value);
 
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
+    if (Number.isNaN(date.getTime())) {
       return value;
     }
 
-    return date.toLocaleDateString(
-      "id-ID",
-      {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }
-    );
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   }
 
-  function logout() {
-    sessionStorage.removeItem(
-      "portalSiswa"
-    );
+  // =====================================================
+  // LOGOUT
+  // =====================================================
 
+  function logout() {
+    sessionStorage.removeItem("portalSiswa");
     router.push("/");
   }
 
+  // =====================================================
+  // LOADING
+  // =====================================================
+
   if (!siswa) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-100">
-        <div className="text-gray-500">
-          Memuat portal siswa...
-        </div>
+      <main className="min-h-screen flex items-center justify-center bg-[#f5f8f6]">
+        <div className="w-7 h-7 border-3 border-[#0B6B32]/20 border-t-[#0B6B32] rounded-full animate-spin" />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 p-4 md:p-6">
+    <main className="min-h-screen bg-[#f5f8f6] text-slate-800">
 
-      <div className="max-w-5xl mx-auto space-y-5">
+      {/* =================================================
+          HEADER
+      ================================================= */}
 
-        {/* HEADER */}
+      <header className="bg-[#0B6B32] text-white">
+        <div className="max-w-3xl mx-auto px-4 py-4">
 
-        <section className="bg-white rounded-2xl shadow-md p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center justify-between">
 
-          <div>
-            <p className="text-xs text-gray-500">
-              Portal Orang Tua
-            </p>
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.15em] text-white/60">
+                Portal Orang Tua
+              </p>
 
-            <h1 className="text-2xl font-black text-green-700">
-              {siswa.namaSiswa}
-            </h1>
+              <h1 className="text-lg font-bold mt-0.5">
+                {siswa.namaSiswa}
+              </h1>
 
-            <p className="text-sm text-gray-500">
-              ID Siswa: {siswa.idSiswa}
-            </p>
+              <p className="text-[10px] text-white/60">
+                {siswa.idSiswa}
+              </p>
+            </div>
+
+            <button
+              onClick={logout}
+              className="text-[10px] px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20"
+            >
+              Keluar
+            </button>
+
           </div>
 
-          <button
-            onClick={logout}
-            className="border border-red-200 text-red-600 rounded-lg px-4 py-2 text-sm hover:bg-red-50"
-          >
-            Keluar
-          </button>
+        </div>
+      </header>
+
+      {/* =================================================
+          CONTENT
+      ================================================= */}
+
+      <div className="max-w-3xl mx-auto px-4 py-3 space-y-3">
+
+        {/* =================================================
+            PEMBAYARAN + KEHADIRAN
+        ================================================= */}
+
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+          {/* PEMBAYARAN */}
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5">
+
+            <div className="flex items-center justify-between mb-3">
+
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center text-xs">
+                  💳
+                </span>
+
+                <span className="text-xs font-bold">
+                  Pembayaran
+                </span>
+              </div>
+
+              <span
+                className={`text-[9px] font-bold px-2 py-1 rounded-full ${
+                  pembayaran?.current?.status
+                    ?.toLowerCase()
+                    .includes("lunas")
+                    ? "bg-green-50 text-green-700"
+                    : "bg-red-50 text-red-600"
+                }`}
+              >
+                {pembayaran?.current?.status?.toUpperCase() ||
+                  "-"}
+              </span>
+
+            </div>
+
+            {loadingPembayaran ? (
+              <div className="h-10 bg-gray-50 rounded-lg animate-pulse" />
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+
+                <div>
+                  <p className="text-[9px] text-gray-400">
+                    Program
+                  </p>
+
+                  <p className="text-xs font-semibold mt-0.5">
+                    {pembayaran?.current?.program || "-"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-[9px] text-gray-400">
+                    Paket
+                  </p>
+
+                  <p className="text-xs font-semibold mt-0.5">
+                    {pembayaran?.current?.kuota
+                      ? `${pembayaran.current.kuota}x`
+                      : "-"}
+                  </p>
+                </div>
+
+              </div>
+            )}
+
+            {pembayaran?.current && (
+              <div className="mt-3 pt-2 border-t border-gray-100 flex justify-between">
+                <span className="text-[9px] text-gray-400">
+                  Bayar
+                </span>
+
+                <span className="text-[10px] font-semibold">
+                  {pembayaran.current.tanggalBayar
+                    ? formatTanggal(
+                        pembayaran.current.tanggalBayar
+                      )
+                    : "-"}
+                </span>
+              </div>
+            )}
+
+            {pembayaran?.history &&
+              pembayaran.history.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <p className="text-[9px] text-gray-400 mb-1">
+                    Riwayat
+                  </p>
+
+                  {pembayaran.history
+                    .slice(0, 3)
+                    .map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between text-[9px] py-0.5"
+                      >
+                        <span className="text-gray-400">
+                          {formatTanggal(
+                            item.tanggal
+                          )}
+                        </span>
+
+                        <span className="font-semibold">
+                          {item.status || "-"}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+          </div>
+
+          {/* KEHADIRAN */}
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5">
+
+            <div className="flex items-center justify-between mb-3">
+
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-xs">
+                  🗓️
+                </span>
+
+                <span className="text-xs font-bold">
+                  Kehadiran
+                </span>
+              </div>
+
+              <span className="text-lg font-black text-[#0B6B32]">
+                {kehadiran?.persentase || 0}%
+              </span>
+
+            </div>
+
+            {loadingKehadiran ? (
+              <div className="h-12 bg-gray-50 rounded-lg animate-pulse" />
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+
+                <div className="text-center bg-gray-50 rounded-lg py-2">
+                  <p className="text-[8px] text-gray-400">
+                    Total
+                  </p>
+                  <p className="text-sm font-bold">
+                    {kehadiran?.total || 0}
+                  </p>
+                </div>
+
+                <div className="text-center bg-green-50 rounded-lg py-2">
+                  <p className="text-[8px] text-green-600">
+                    Hadir
+                  </p>
+                  <p className="text-sm font-bold text-green-700">
+                    {kehadiran?.hadir || 0}
+                  </p>
+                </div>
+
+                <div className="text-center bg-red-50 rounded-lg py-2">
+                  <p className="text-[8px] text-red-500">
+                    Alpha
+                  </p>
+                  <p className="text-sm font-bold text-red-600">
+                    {kehadiran?.alpha || 0}
+                  </p>
+                </div>
+
+              </div>
+            )}
+
+          </div>
 
         </section>
 
-        {/* ERROR */}
+        {/* =================================================
+            PERKEMBANGAN
+        ================================================= */}
 
-        {error && (
-          <section className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">
-            {error}
-          </section>
-        )}
+        <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
 
-        {/* PROGRESS */}
+          <div className="flex items-center justify-between mb-3">
 
-        <section>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">
+                  🏊
+                </span>
 
-          <div className="mb-3">
-            <h2 className="text-xl font-black text-slate-900">
-              🏊 Perkembangan Kemampuan
-            </h2>
-
-            <p className="text-sm text-gray-500">
-              Perkembangan kemampuan siswa
-            </p>
-          </div>
-
-          {loading ? (
-            <div className="bg-white rounded-2xl shadow-md p-6 text-sm text-gray-500">
-              Memuat data progress...
-            </div>
-          ) : latestProgress ? (
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-              <div className="bg-white rounded-2xl shadow-md p-5">
-                <p className="text-xs text-gray-500">
-                  Level Saat Ini
-                </p>
-
-                <p className="text-3xl font-black text-green-700 mt-1">
-                  {currentLevel || "-"}
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-5">
-                <p className="text-xs text-gray-500">
-                  Nilai Terakhir
-                </p>
-
-                <p className="text-3xl font-black text-blue-600 mt-1">
-                  {latestScore}
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-5">
-                <p className="text-xs text-gray-500">
-                  Hasil Evaluasi
-                </p>
-
-                <p className="text-xl font-black text-slate-900 mt-2">
-                  {latestProgress.Keputusan ||
-                    "-"}
-                </p>
-              </div>
-
-            </div>
-
-          ) : (
-
-            <div className="bg-white rounded-2xl shadow-md p-6 text-sm text-gray-500">
-              Belum ada data progress siswa.
-            </div>
-
-          )}
-
-        </section>
-
-        {/* DETAIL KEMAMPUAN */}
-
-        {latestProgress && (
-
-          <section className="bg-white rounded-2xl shadow-md p-5">
-
-            <div className="flex items-center justify-between mb-4">
-
-              <div>
-                <h2 className="text-lg font-black text-slate-900">
-                  📊 Detail Kemampuan
+                <h2 className="text-xs font-bold">
+                  Perkembangan
                 </h2>
-
-                <p className="text-xs text-gray-500">
-                  Indikator Level {currentLevel}
-                </p>
               </div>
 
-              {latestProgress.Tanggal && (
-                <p className="text-xs text-gray-500">
+              {latestProgress?.Tanggal && (
+                <p className="text-[9px] text-gray-400 mt-1">
+                  Evaluasi{" "}
                   {formatTanggal(
                     latestProgress.Tanggal
                   )}
                 </p>
               )}
+            </div>
+
+            {latestProgress?.Keputusan && (
+              <span className="text-[9px] font-bold text-green-700 bg-green-50 px-2 py-1 rounded-full">
+                {latestProgress.Keputusan}
+              </span>
+            )}
+
+          </div>
+
+          {loading ? (
+            <div className="h-16 bg-gray-50 rounded-lg animate-pulse" />
+          ) : latestProgress ? (
+
+            <>
+              <div className="grid grid-cols-3 divide-x divide-gray-100">
+
+                <div className="text-center">
+                  <p className="text-[9px] text-gray-400">
+                    Level
+                  </p>
+                  <p className="text-xl font-black text-[#0B6B32]">
+                    {currentLevel || "-"}
+                  </p>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-[9px] text-gray-400">
+                    Nilai
+                  </p>
+                  <p className="text-xl font-black text-blue-600">
+                    {latestScore}
+                  </p>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-[9px] text-gray-400">
+                    Pelatih
+                  </p>
+                  <p className="text-[10px] font-semibold mt-1.5 px-1 truncate">
+                    {latestProgress.Pelatih || "-"}
+                  </p>
+                </div>
+
+              </div>
+
+              <div className="mt-3">
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#0B6B32] rounded-full"
+                    style={{
+                      width: `${Math.max(
+                        0,
+                        Math.min(100, latestScore)
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+            </>
+          ) : (
+            <p className="text-[10px] text-gray-400">
+              Belum ada data perkembangan.
+            </p>
+          )}
+
+        </section>
+
+        {/* =================================================
+            DETAIL KEMAMPUAN
+        ================================================= */}
+
+        {latestProgress && (
+          <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+
+            <div className="flex justify-between items-center mb-3">
+
+              <div>
+                <h2 className="text-xs font-bold">
+                  📊 Kemampuan Renang
+                </h2>
+
+                <p className="text-[9px] text-gray-400 mt-0.5">
+                  Level {currentLevel}
+                </p>
+              </div>
+
+              <span className="text-[9px] text-gray-400">
+                {indicators.length} indikator
+              </span>
 
             </div>
 
             {loadingDetail ? (
-
-              <div className="text-sm text-gray-500 py-4">
-                Memuat detail kemampuan...
+              <div className="space-y-3">
+                {[1, 2, 3].map((x) => (
+                  <div
+                    key={x}
+                    className="h-6 bg-gray-50 rounded animate-pulse"
+                  />
+                ))}
               </div>
+            ) : indicators.length > 0 ? (
 
-            ) : latestIndicators.length > 0 ? (
+              <div className="space-y-3">
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {indicators.map((item) => (
+                  <div key={item.nomor}>
 
-                {latestIndicators.map(
-                  (item) => (
+                    <div className="flex justify-between items-center mb-1">
 
-                    <div
-                      key={`${item.nomor}-${item.indikator}`}
-                      className="border border-gray-100 rounded-xl p-3"
-                    >
+                      <div className="flex items-center gap-2 min-w-0">
 
-                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <span className="w-5 h-5 rounded bg-green-50 text-[#0B6B32] text-[8px] font-bold flex items-center justify-center flex-shrink-0">
+                          {String(item.nomor).padStart(
+                            2,
+                            "0"
+                          )}
+                        </span>
 
-                        <p className="text-xs font-semibold text-gray-700">
-                          {item.nomor}.{" "}
+                        <span className="text-[10px] text-gray-600 truncate">
                           {item.indikator}
-                        </p>
-
-                        <span className="shrink-0 text-sm font-black text-green-700">
-                          {item.nilai}%
                         </span>
 
                       </div>
 
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-
-                        <div
-                          className="h-full bg-green-600 rounded-full"
-                          style={{
-                            width:
-                              `${item.nilai}%`,
-                          }}
-                        />
-
-                      </div>
-
-                      {item.tujuan && (
-                        <p className="text-[10px] text-gray-400 mt-1 truncate">
-                          {item.tujuan}
-                        </p>
-                      )}
+                      <span className="text-[9px] font-bold text-[#0B6B32] ml-2">
+                        {item.nilai}%
+                      </span>
 
                     </div>
 
-                  )
-                )}
+                    <div className="ml-7 h-1 bg-gray-100 rounded-full overflow-hidden">
+
+                      <div
+                        className="h-full bg-[#0B6B32] rounded-full"
+                        style={{
+                          width: `${item.nilai}%`,
+                        }}
+                      />
+
+                    </div>
+
+                  </div>
+                ))}
 
               </div>
 
             ) : (
-
-              <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-500">
-                Detail indikator belum tersedia.
-              </div>
-
+              <p className="text-[10px] text-gray-400">
+                Detail kemampuan belum tersedia.
+              </p>
             )}
 
           </section>
-
         )}
 
-        {/* CATATAN */}
+        {/* =================================================
+            CATATAN
+        ================================================= */}
 
         {latestProgress && (
+          <section className="bg-[#0B6B32] rounded-xl px-4 py-3 text-white">
 
-          <section className="bg-white rounded-2xl shadow-md p-5">
+            <div className="flex gap-3 items-start">
 
-            <h2 className="text-lg font-black mb-2">
-              📝 Catatan Pelatih
-            </h2>
+              <span className="text-sm">
+                📝
+              </span>
 
-            <p className="text-sm text-gray-600 leading-relaxed">
-              {latestProgress.Catatan ||
-                detailProgress?.Catatan ||
-                "Belum ada catatan pelatih."}
-            </p>
+              <div>
+                <p className="text-[9px] text-white/60 uppercase tracking-wide">
+                  Catatan Pelatih
+                </p>
+
+                <p className="text-[10px] leading-5 mt-0.5 text-white/90">
+                  {latestProgress.Catatan ||
+                    detailProgress?.Catatan ||
+                    "Belum ada catatan."}
+                </p>
+              </div>
+
+            </div>
 
           </section>
-
         )}
 
-      </div>
+        {/* =================================================
+            RIWAYAT
+        ================================================= */}
 
+        <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+
+          <div className="flex items-center justify-between mb-3">
+
+            <div>
+              <h2 className="text-xs font-bold">
+                📈 Riwayat Perkembangan
+              </h2>
+
+              <p className="text-[9px] text-gray-400">
+                Evaluasi sebelumnya
+              </p>
+            </div>
+
+            <span className="text-[9px] text-gray-400">
+              {sortedProgress.length} data
+            </span>
+
+          </div>
+
+          {loading ? (
+            <p className="text-[10px] text-gray-400">
+              Memuat...
+            </p>
+          ) : sortedProgress.length > 0 ? (
+
+            <div className="divide-y divide-gray-100">
+
+              {sortedProgress.map(
+                (item, index) => (
+
+                  <div
+                    key={
+                      item["ID Progress"] ||
+                      `${item.Tanggal}-${index}`
+                    }
+                    className="flex items-center justify-between py-2"
+                  >
+
+                    <div className="flex items-center gap-2">
+
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0B6B32]" />
+
+                      <div>
+                        <p className="text-[10px] font-semibold">
+                          {formatTanggal(
+                            item.Tanggal
+                          )}
+                        </p>
+
+                        <p className="text-[8px] text-gray-400">
+                          {item.Pelatih || "Pelatih"}
+                        </p>
+                      </div>
+
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+
+                      <span className="px-1.5 py-1 rounded bg-green-50 text-[8px] font-bold text-green-700">
+                        L{item.Level || "-"}
+                      </span>
+
+                      <span className="px-1.5 py-1 rounded bg-blue-50 text-[8px] font-bold text-blue-600">
+                        {item["Nilai Akhir"] ?? "-"}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                )
+              )}
+
+            </div>
+
+          ) : (
+            <p className="text-[10px] text-gray-400">
+              Belum ada riwayat.
+            </p>
+          )}
+
+        </section>
+
+        <p className="text-center text-[8px] text-gray-400 py-1">
+          Kesit Swimming Club
+        </p>
+
+      </div>
     </main>
   );
 }
