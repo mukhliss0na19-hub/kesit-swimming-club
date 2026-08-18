@@ -51,6 +51,7 @@ export default function DetailSiswaPage() {
   const id = teks(params?.id);
 
   const [siswa, setSiswa] = useState<Siswa | null>(null);
+  const [pelatihLogin, setPelatihLogin] = useState("");
   const [master, setMaster] = useState<MasterItem[]>([]);
   const [levelAktif, setLevelAktif] = useState(1);
   const [skor, setSkor] = useState<Record<string, number>>({});
@@ -69,7 +70,24 @@ const [pesanSimpan, setPesanSimpan] = useState("");
     if (!id) return;
 
     let aktif = true;
+    const storedPelatih = sessionStorage.getItem("pelatih");
 
+    if (storedPelatih) {
+      try {
+        const dataPelatih = JSON.parse(storedPelatih);
+
+        if (aktif) {
+          setPelatihLogin(
+            teks(dataPelatih?.namaPelatih)
+          );
+        }
+      } catch (error) {
+        console.error(
+          "DATA PELATIH LOGIN TIDAK VALID:",
+          error
+        );
+      }
+    }
     async function loadSiswa() {
       try {
         setLoadingSiswa(true);
@@ -334,7 +352,7 @@ async function simpanProgress() {
         nama: siswa.Nama,
         program: siswa.Program,
         level: levelAktif,
-        pelatih: siswa.Pelatih || "",
+        pelatih: pelatihLogin,
         nilaiAkhir,
         keputusan,
         catatan,
