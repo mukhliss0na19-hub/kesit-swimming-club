@@ -1,4 +1,5 @@
 "use client";
+
 import LoginModal from "@/components/auth/LoginModal";
 import Link from "next/link";
 import { useState } from "react";
@@ -15,8 +16,22 @@ const menu = [
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
 
-  const [showLogin, setShowLogin] =
-  useState(false);
+  // Popup login Admin
+  const [showLogin, setShowLogin] = useState(false);
+
+  // Popup pilihan jenis login
+  const [showLoginChoice, setShowLoginChoice] = useState(false);
+
+  // Buka pilihan login
+  const openLoginChoice = () => {
+    setShowLoginChoice(true);
+  };
+
+  // Pilih Login Admin
+  const openAdminLogin = () => {
+    setShowLoginChoice(false);
+    setShowLogin(true);
+  };
 
   return (
     <header className="fixed top-0 z-50 w-full px-3 pt-3">
@@ -38,6 +53,7 @@ export default function Navbar() {
                 <h1 className="text-[18px] font-black italic text-[#22C55E] md:text-[26px]">
                   KESIT
                 </h1>
+
                 <p className="text-[8px] font-bold tracking-[1.5px] text-[#F5C518] md:text-[12px]">
                   SWIMMING CLUB
                 </p>
@@ -69,14 +85,12 @@ export default function Navbar() {
               Daftar
             </Link>
 
-            {/* ADMIN LOGIN - DESKTOP */}
+            {/* LOGIN - DESKTOP */}
             <button
-              onClick={() =>
-              setShowLogin(true)
-              }
-                className="hidden rounded-full bg-black px-5 py-3 text-sm font-bold text-white lg:block"
+              onClick={openLoginChoice}
+              className="hidden rounded-full bg-black px-5 py-3 text-sm font-bold text-white lg:block"
             >
-              Admin Login
+              Login
             </button>
 
             {/* MOBILE MENU */}
@@ -104,26 +118,79 @@ export default function Navbar() {
               </a>
             ))}
 
-           {/* ADMIN LOGIN MOBILE */}
+            {/* LOGIN MOBILE */}
             <button
-                onClick={() => {
+              onClick={() => {
                 setMobileMenu(false);
-                setShowLogin(true);
-                }}
-                  className="mt-4 block w-full rounded-xl bg-black py-3 text-center font-bold text-white"
+                setShowLoginChoice(true);
+              }}
+              className="mt-4 block w-full rounded-xl bg-black py-3 text-center font-bold text-white"
             >
-            Admin Login
+              Login
             </button>
 
           </div>
         )}
       </div>
+
+      {/* ================================================= */}
+      {/* POPUP PILIHAN LOGIN */}
+      {/* ================================================= */}
+
+      {showLoginChoice && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl">
+
+            {/* CLOSE */}
+            <button
+              onClick={() => setShowLoginChoice(false)}
+              className="absolute right-5 top-4 text-2xl font-bold text-gray-400 hover:text-gray-700"
+            >
+              ×
+            </button>
+
+            {/* TITLE */}
+            <div className="mb-7 text-center">
+              <h2 className="text-2xl font-black text-[#0B6B32]">
+                Login
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Silakan pilih jenis akun Anda
+              </p>
+            </div>
+
+            {/* LOGIN ADMIN */}
+            <button
+              onClick={openAdminLogin}
+              className="mb-4 w-full rounded-2xl bg-black px-5 py-4 text-center font-bold text-white transition hover:bg-gray-800"
+            >
+              🔐 Login Admin
+            </button>
+
+            {/* LOGIN PELATIH */}
+            <Link
+              href="/pelatih/login"
+              onClick={() => setShowLoginChoice(false)}
+              className="block w-full rounded-2xl bg-[#0B6B32] px-5 py-4 text-center font-bold text-white transition hover:bg-[#075425]"
+            >
+              🏊 Login Pelatih
+            </Link>
+
+          </div>
+        </div>
+      )}
+
+      {/* ================================================= */}
+      {/* POPUP LOGIN ADMIN YANG SUDAH ADA */}
+      {/* ================================================= */}
+
       <LoginModal
         isOpen={showLogin}
-        onClose={() =>
-        setShowLogin(false)
-        }
+        onClose={() => setShowLogin(false)}
       />
+
     </header>
   );
 }
