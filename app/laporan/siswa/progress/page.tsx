@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 type Siswa = {
   idSiswa: string;
@@ -46,7 +47,7 @@ type MasterIndicator = {
   indikator: string;
 };
 
-export default function ProgressSiswaPage() {
+function ProgressSiswaContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -83,7 +84,11 @@ export default function ProgressSiswaPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!siswa?.idSiswa) return;
+    const currentSiswa = siswa;
+
+    if (!currentSiswa?.idSiswa) return;
+
+    const idSiswa: string = currentSiswa.idSiswa;
 
     async function load() {
       try {
@@ -91,7 +96,7 @@ export default function ProgressSiswaPage() {
         setError("");
 
         const progressRes = await fetch(
-          `/api/progress/riwayat?idSiswa=${encodeURIComponent(siswa.idSiswa)}`,
+          `/api/progress/riwayat?idSiswa=${encodeURIComponent(idSiswa)}`,
           { cache: "no-store" }
         );
 
@@ -393,5 +398,19 @@ export default function ProgressSiswaPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ProgressSiswaPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center text-sm text-gray-500">
+          Memuat...
+        </main>
+      }
+    >
+      <ProgressSiswaContent />
+    </Suspense>
   );
 }
